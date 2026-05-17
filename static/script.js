@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (role === 'user') {
             avatarHtml = `<div class="avatar"><i class="fa-solid fa-user"></i></div>`;
         } else {
-            avatarHtml = `<div class="avatar"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Indian_Army_Logo.svg" alt="AI"></div>`;
+            avatarHtml = `<div class="avatar"><img src="bot_icon.png" alt="AI"></div>`;
         }
 
         // Use marked.js if available, otherwise just use text
