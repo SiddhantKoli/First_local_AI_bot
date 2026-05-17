@@ -12,6 +12,74 @@ document.addEventListener('DOMContentLoaded', () => {
         promptInput.focus();
     };
 
+    // Pool of dynamic prompts for Quick Access categories
+    const promptPools = {
+        procedures: [
+            "What are the standard operating procedures for patrols?",
+            "Explain the duties and routine of an Observation Post.",
+            "What is the structure and protocol of a patrol order (SMEAC)?",
+            "How do we execute a peel drill to break contact under fire?"
+        ],
+        weapons: [
+            "Explain the specifications and usage of the AK-203 rifle.",
+            "What is the caliber, effective range, and magazine capacity of the INSAS rifle?",
+            "What are the safety regulations and misfire drills for the 81mm Mortar?",
+            "Explain the specifications and backblast danger area of the Carl Gustaf recoilless rifle."
+        ],
+        tactics: [
+            "What are the standard room clearing tactics in urban warfare?",
+            "Explain the key tactical principles of Jungle Warfare.",
+            "What are the main stages of a Cordon and Search Operation (CASO)?",
+            "How does a section execute immediate action drills upon enemy contact?"
+        ],
+        equipment: [
+            "What are the capabilities of the BMP-2 Sarath?",
+            "What is the armament and protective armor of the T-90 Bhishma tank?",
+            "How do we conduct daily preventive maintenance (PMCS) for military vehicles?",
+            "What are the emergency evacuation procedures for a BMP-2 crew?"
+        ],
+        medical: [
+            "How do you apply a combat tourniquet?",
+            "What is the immediate treatment for a tension pneumothorax in the field?",
+            "How do we prevent and treat hypothermia in high-altitude postings like Siachen?",
+            "What are the symptoms and immediate field treatments for High Altitude Pulmonary Edema (HAPE)?"
+        ],
+        intel: [
+            "What are the key lessons from the Kargil War?",
+            "How do we perform resection to find our position using a map and compass?",
+            "What is the format and criteria for reporting enemy activity (SALUTE format)?",
+            "What are the key indicators for recognizing an Improvised Explosive Device (IED)?"
+        ]
+    };
+
+    // Tracking indices for each category rotation
+    const promptIndices = {
+        procedures: 0,
+        weapons: 0,
+        tactics: 0,
+        equipment: 0,
+        medical: 0,
+        intel: 0
+    };
+
+    // Rotate and insert the next question for a given category, clearing the previous value first
+    window.rotateCategoryPrompt = (category) => {
+        if (!promptPools[category]) return;
+        
+        const pool = promptPools[category];
+        const currentIndex = promptIndices[category];
+        
+        // Clear previous input completely
+        promptInput.value = '';
+        
+        // Insert new dynamic prompt
+        promptInput.value = pool[currentIndex];
+        promptInput.focus();
+        
+        // Rotate index sequentially for next click
+        promptIndices[category] = (currentIndex + 1) % pool.length;
+    };
+
     const appendMessage = (role, content) => {
         const msgDiv = document.createElement('div');
         msgDiv.className = `message ${role}`;
