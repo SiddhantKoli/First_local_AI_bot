@@ -44,5 +44,13 @@ app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    # Make sure we're in the correct directory
-    uvicorn.run("api:app", host="127.0.0.1", port=8000, reload=True)
+    import os
+    
+    # Check if encryption certificates exist
+    if os.path.exists("key.pem") and os.path.exists("cert.pem"):
+        print("Starting SECURE E2EE Server (HTTPS)...")
+        uvicorn.run("api:app", host="0.0.0.0", port=8443, 
+                    ssl_keyfile="key.pem", ssl_certfile="cert.pem")
+    else:
+        print("Starting UNSECURE Server (HTTP)...")
+        uvicorn.run("api:app", host="0.0.0.0", port=8443, reload=True)
