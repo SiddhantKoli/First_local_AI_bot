@@ -316,6 +316,21 @@ body {
     object-fit: contain;
 }
 
+/* Typing cursor styling */
+.typing-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background-color: var(--accent-green);
+    margin-left: 5px;
+    animation: cursor-blink 1s steps(2, start) infinite;
+    vertical-align: middle;
+}
+
+@keyframes cursor-blink {
+    to { visibility: hidden; }
+}
+
 .msg-content {
     background-color: var(--card-bg);
     border: 1px solid var(--card-border);

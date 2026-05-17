@@ -23,39 +23,84 @@ document.addEventListener('DOMContentLoaded', () => {
             avatarHtml = `<div class="avatar"><img src="bot_icon.png" alt="AI"></div>`;
         }
 
-        // Use marked.js if available, otherwise just use text
-        let formattedContent = content;
-        if (typeof marked !== 'undefined') {
-            formattedContent = marked.parse(content);
-        }
+        chatMessages.appendChild(msgDiv);
 
-        let sourcesHtml = '';
-        if (sources && sources.length > 0) {
-            sourcesHtml = `
-                <div class="sources-box">
-                    <h5><i class="fa-solid fa-book-bookmark"></i> KNOWLEDGE SOURCES</h5>
-                    <ul>
-                        ${sources.map((s, i) => `<li>${i+1}. [${s.category}] ${s.subcategory} &rarr; ${s.topic}</li>`).join('')}
-                    </ul>
+        if (role === 'user') {
+            msgDiv.innerHTML = `
+                ${avatarHtml}
+                <div class="msg-content">
+                    ${typeof marked !== 'undefined' ? marked.parse(content) : content}
                 </div>
             `;
+            
+            // Scroll to bottom
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        } else {
+            // Bot typewriter effect
+            msgDiv.innerHTML = `
+                ${avatarHtml}
+                <div class="msg-content">
+                    <span class="typing-cursor"></span>
+                </div>
+            `;
+
+            const contentDiv = msgDiv.querySelector('.msg-content');
+            let i = 0;
+            const speed = 10; // Extremely fast, snappy updates (in milliseconds)
+            
+            const typeWriter = () => {
+                if (i < content.length) {
+                    // Adjust dynamic chunk size depending on text length to prevent long answers from lagging
+                    let charsToAdd = 1;
+                    if (content.length > 600) {
+                        charsToAdd = 2;
+                    }
+                    if (content.length > 1200) {
+                        charsToAdd = 3;
+                    }
+
+                    const partial = content.substring(0, i + charsToAdd);
+                    i += charsToAdd;
+
+                    let rendered = typeof marked !== 'undefined' ? marked.parse(partial) : partial;
+                    contentDiv.innerHTML = rendered + '<span class="typing-cursor"></span>';
+
+                    window.scrollTo({
+                        top: document.body.scrollHeight,
+                        behavior: 'smooth'
+                    });
+
+                    setTimeout(typeWriter, speed);
+                } else {
+                    // Final rendering complete
+                    let finalRendered = typeof marked !== 'undefined' ? marked.parse(content) : content;
+                    contentDiv.innerHTML = finalRendered;
+
+                    // Add sources dynamically at the end
+                    if (sources && sources.length > 0) {
+                        const sourcesHtml = `
+                            <div class="sources-box">
+                                <h5><i class="fa-solid fa-book-bookmark"></i> KNOWLEDGE SOURCES</h5>
+                                <ul>
+                                    ${sources.map((s, i) => `<li>${i+1}. [${s.category}] ${s.subcategory} &rarr; ${s.topic}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                        contentDiv.innerHTML += sourcesHtml;
+                    }
+
+                    window.scrollTo({
+                        top: document.body.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }
+            };
+
+            typeWriter();
         }
-
-        msgDiv.innerHTML = `
-            ${avatarHtml}
-            <div class="msg-content">
-                ${formattedContent}
-                ${sourcesHtml}
-            </div>
-        `;
-
-        chatMessages.appendChild(msgDiv);
-        
-        // Scroll to bottom
-        window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: 'smooth'
-        });
     };
 
     const sendMessage = async () => {
