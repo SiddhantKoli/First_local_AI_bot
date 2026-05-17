@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sainik Sahayak - Indian Army AI</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Background image container -->
+    <div class="bg-container"></div>
+    <div class="bg-overlay"></div>
+
+    <div class="app-container">
+        <!-- Top Navigation -->
+        <header class="top-nav">
+            <div class="nav-left">
+                <!-- Placeholder for future elements -->
+            </div>
+            <div class="nav-right">
+                <button class="btn-deploy"><i class="fa-solid fa-location-arrow"></i> Deploy</button>
+                <button class="btn-icon"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Hero Section -->
+            <div class="hero-section" id="hero-section">
+                <div class="badge">
+                    <i class="fa-regular fa-star"></i> AI ASSISTANT FOR INDIAN ARMY PERSONNEL
+                </div>
+                
+                <h1 class="main-title">SAINIK SAHAYAK</h1>
+                <h2 class="hindi-title">(सैनिक सहायक)</h2>
+                <p class="subtitle">Your Intelligent Companion for Military Knowledge & Operations</p>
+                
+                <!-- Quick Access Cards -->
+                <div class="quick-access-container">
+                    <h3 class="section-label">QUICK ACCESS</h3>
+                    <div class="cards-grid">
+                        <div class="card" onclick="insertPrompt('What are the standard operating procedures for patrols?')">
+                            <div class="card-icon"><i class="fa-regular fa-file-lines"></i></div>
+                            <h4>Standard Operating Procedures</h4>
+                            <p>SOPs & Drill Manuals</p>
+                            <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                        <div class="card" onclick="insertPrompt('Explain the specifications and usage of the AK-203 rifle.')">
+                            <div class="card-icon"><i class="fa-solid fa-person-rifle"></i></div>
+                            <h4>Weapons & Ammunition</h4>
+                            <p>Technical Specs & Usage</p>
+                            <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                        <div class="card" onclick="insertPrompt('What are the standard room clearing tactics in urban warfare?')">
+                            <div class="card-icon"><i class="fa-solid fa-crosshairs"></i></div>
+                            <h4>Tactics & Strategies</h4>
+                            <p>Battle Tactics & Formations</p>
+                            <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                        <div class="card" onclick="insertPrompt('What are the capabilities of the BMP-2 Sarath?')">
+                            <div class="card-icon"><i class="fa-solid fa-tank-water"></i></div>
+                            <h4>Equipment & Vehicles</h4>
+                            <p>Military Assets & Specs</p>
+                            <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                        <div class="card" onclick="insertPrompt('How do you apply a combat tourniquet?')">
+                            <div class="card-icon"><i class="fa-solid fa-suitcase-medical"></i></div>
+                            <h4>Medical & First Aid</h4>
+                            <p>Combat Medical Support</p>
+                            <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                        <div class="card" onclick="insertPrompt('What are the key lessons from the Kargil War?')">
+                            <div class="card-icon"><i class="fa-solid fa-satellite-dish"></i></div>
+                            <h4>Intelligence & Reconnaissance</h4>
+                            <p>Intel & Recon Ops</p>
+                            <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Area (Hidden by default) -->
+            <div class="chat-section" id="chat-section" style="display: none;">
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Messages will be injected here -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Search / Input Area -->
+        <div class="input-container-wrapper">
+            <div class="input-container">
+                <div class="input-box">
+                    <div class="input-icon"><i class="fa-solid fa-helmet-un"></i></div>
+                    <input type="text" id="prompt-input" placeholder="Ask a question about military procedures, weapons, tactics, equipment..." autocomplete="off">
+                </div>
+                
+                <div class="input-footer">
+                    <div class="tags">
+                        <span class="tag" onclick="insertPrompt('Procedures: ')"><i class="fa-regular fa-file-lines"></i> Procedures</span>
+                        <span class="tag" onclick="insertPrompt('Weapons: ')"><i class="fa-solid fa-person-rifle"></i> Weapons</span>
+                        <span class="tag" onclick="insertPrompt('Tactics: ')"><i class="fa-solid fa-crosshairs"></i> Tactics</span>
+                        <span class="tag" onclick="insertPrompt('Equipment: ')"><i class="fa-solid fa-tank-water"></i> Equipment</span>
+                        <span class="tag" onclick="insertPrompt('Medical: ')"><i class="fa-solid fa-suitcase-medical"></i> Medical</span>
+                        <span class="tag" onclick="insertPrompt('Intel: ')"><i class="fa-solid fa-satellite-dish"></i> Intel</span>
+                    </div>
+                    <button id="send-btn" class="btn-send"><i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Footer -->
+        <footer class="bottom-footer">
+            <div class="footer-item">
+                <i class="fa-solid fa-shield-halved"></i>
+                <div>
+                    <span class="footer-label">SECURE SYSTEM</span>
+                    <span class="footer-value">End-to-end encrypted</span>
+                </div>
+            </div>
+            <div class="footer-item center">
+                <i class="fa-solid fa-lock"></i>
+                <div>
+                    <span class="footer-label">DATA CLASSIFICATION</span>
+                    <span class="footer-value">RESTRICTED</span>
+                </div>
+            </div>
+            <div class="footer-item">
+                <i class="fa-solid fa-microchip"></i>
+                <div>
+                    <span class="footer-label">AI MODEL</span>
+                    <span class="footer-value">Llama 3.2 Local</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Processing tactical request...</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
