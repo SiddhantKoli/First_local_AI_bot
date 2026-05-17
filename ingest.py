@@ -104,6 +104,16 @@ def load_txt_to_documents(txt_path: str) -> list[Document]:
 
 def ingest_all_documents():
     """Scan data directory and ingest all supported files."""
+    # Clear existing Chroma DB to prevent duplicate entries
+    import shutil
+    if os.path.exists(CHROMA_DB_DIR):
+        print(f"[INFO] Removing old vector store at: {CHROMA_DB_DIR}")
+        try:
+            shutil.rmtree(CHROMA_DB_DIR)
+            print("[INFO] Successfully cleared old vector store.")
+        except Exception as e:
+            print(f"[WARNING] Could not delete old vector store (may be locked/in use): {e}")
+
     print(f"[INFO] Scanning '{DATA_DIR}/' for documents...")
     all_documents = []
 
