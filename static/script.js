@@ -12,95 +12,80 @@ document.addEventListener('DOMContentLoaded', () => {
         promptInput.focus();
     };
 
-    const appendMessage = (role, content, sources = []) => {
+    const appendMessage = (role, content) => {
         const msgDiv = document.createElement('div');
         msgDiv.className = `message ${role}`;
 
-        let avatarHtml = '';
-        if (role === 'user') {
-            avatarHtml = `<div class="avatar"><i class="fa-solid fa-user"></i></div>`;
-        } else {
-            avatarHtml = `<div class="avatar"><img src="bot_icon.png" alt="AI"></div>`;
-        }
+        let avatarHtml = `<div class="avatar"><i class="fa-solid fa-user"></i></div>`;
+
+        msgDiv.innerHTML = `
+            ${avatarHtml}
+            <div class="msg-content">
+                ${typeof marked !== 'undefined' ? marked.parse(content) : content}
+            </div>
+        `;
 
         chatMessages.appendChild(msgDiv);
 
-        if (role === 'user') {
-            msgDiv.innerHTML = `
-                ${avatarHtml}
-                <div class="msg-content">
-                    ${typeof marked !== 'undefined' ? marked.parse(content) : content}
-                </div>
-            `;
-            
-            // Scroll to bottom
-            window.scrollTo({
-                top: document.body.scrollHeight,
-                behavior: 'smooth'
-            });
-        } else {
-            // Bot typewriter effect
-            msgDiv.innerHTML = `
-                ${avatarHtml}
-                <div class="msg-content">
-                    <span class="typing-cursor"></span>
-                </div>
-            `;
+        // Scroll to bottom
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+        });
+    };
 
-            const contentDiv = msgDiv.querySelector('.msg-content');
-            let i = 0;
-            const speed = 10; // Extremely fast, snappy updates (in milliseconds)
-            
-            const typeWriter = () => {
-                if (i < content.length) {
-                    // Adjust dynamic chunk size depending on text length to prevent long answers from lagging
-                    let charsToAdd = 1;
-                    if (content.length > 600) {
-                        charsToAdd = 2;
-                    }
-                    if (content.length > 1200) {
-                        charsToAdd = 3;
-                    }
+    const runTypewriter = (contentDiv, content, sources = []) => {
+        let i = 0;
+        const speed = 10; // Snappy update interval
 
-                    const partial = content.substring(0, i + charsToAdd);
-                    i += charsToAdd;
-
-                    let rendered = typeof marked !== 'undefined' ? marked.parse(partial) : partial;
-                    contentDiv.innerHTML = rendered + '<span class="typing-cursor"></span>';
-
-                    window.scrollTo({
-                        top: document.body.scrollHeight,
-                        behavior: 'smooth'
-                    });
-
-                    setTimeout(typeWriter, speed);
-                } else {
-                    // Final rendering complete
-                    let finalRendered = typeof marked !== 'undefined' ? marked.parse(content) : content;
-                    contentDiv.innerHTML = finalRendered;
-
-                    // Add sources dynamically at the end
-                    if (sources && sources.length > 0) {
-                        const sourcesHtml = `
-                            <div class="sources-box">
-                                <h5><i class="fa-solid fa-book-bookmark"></i> KNOWLEDGE SOURCES</h5>
-                                <ul>
-                                    ${sources.map((s, i) => `<li>${i+1}. [${s.category}] ${s.subcategory} &rarr; ${s.topic}</li>`).join('')}
-                                </ul>
-                            </div>
-                        `;
-                        contentDiv.innerHTML += sourcesHtml;
-                    }
-
-                    window.scrollTo({
-                        top: document.body.scrollHeight,
-                        behavior: 'smooth'
-                    });
+        const typeWriter = () => {
+            if (i < content.length) {
+                let charsToAdd = 1;
+                if (content.length > 600) {
+                    charsToAdd = 2;
                 }
-            };
+                if (content.length > 1200) {
+                    charsToAdd = 3;
+                }
 
-            typeWriter();
-        }
+                const partial = content.substring(0, i + charsToAdd);
+                i += charsToAdd;
+
+                let rendered = typeof marked !== 'undefined' ? marked.parse(partial) : partial;
+                contentDiv.innerHTML = rendered + '<span class="typing-cursor"></span>';
+
+                window.scrollTo({
+                    top: document.body.scrollHeight,
+                    behavior: 'smooth'
+                });
+
+                setTimeout(typeWriter, speed);
+            } else {
+                // Done typing, set final parsed markdown
+                let finalRendered = typeof marked !== 'undefined' ? marked.parse(content) : content;
+                contentDiv.innerHTML = finalRendered;
+
+                // Add sources if present
+                if (sources && sources.length > 0) {
+                    const sourcesHtml = `
+                        <div class="sources-box">
+                            <h5><i class="fa-solid fa-book-bookmark"></i> KNOWLEDGE SOURCES</h5>
+                            <ul>
+                                ${sources.map((s, idx) => `<li>${idx+1}. [${s.category}] ${s.subcategory} &rarr; ${s.topic}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                    contentDiv.innerHTML += sourcesHtml;
+                }
+
+                window.scrollTo({
+                    top: document.body.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
+        };
+
+        typeWriter();
     };
 
     const sendMessage = async () => {
@@ -116,7 +101,26 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add user message
         appendMessage('user', prompt);
         promptInput.value = '';
-        loadingOverlay.style.display = 'flex';
+
+        // Add thinking bot message bubble immediately
+        const botMsgDiv = document.createElement('div');
+        botMsgDiv.className = 'message bot';
+        botMsgDiv.innerHTML = `
+            <div class="avatar"><img src="bot_icon.png" alt="AI"></div>
+            <div class="msg-content thinking">
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        `;
+        chatMessages.appendChild(botMsgDiv);
+
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+        });
 
         try {
             const response = await fetch('/api/chat', {
@@ -129,16 +133,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             
-            loadingOverlay.style.display = 'none';
+            const contentDiv = botMsgDiv.querySelector('.msg-content');
+            contentDiv.classList.remove('thinking');
 
             if (data.success) {
-                appendMessage('bot', data.data.answer, data.data.sources);
+                runTypewriter(contentDiv, data.data.answer, data.data.sources);
             } else {
-                appendMessage('bot', `**Error:** ${data.error}`);
+                contentDiv.innerHTML = `**Error:** ${data.error}`;
             }
         } catch (error) {
-            loadingOverlay.style.display = 'none';
-            appendMessage('bot', `**Network Error:** Could not connect to the server.`);
+            const contentDiv = botMsgDiv.querySelector('.msg-content');
+            if (contentDiv) {
+                contentDiv.classList.remove('thinking');
+                contentDiv.innerHTML = `**Network Error:** Could not connect to the server.`;
+            }
             console.error('Error:', error);
         }
     };

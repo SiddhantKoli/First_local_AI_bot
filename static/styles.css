@@ -331,6 +331,47 @@ body {
     to { visibility: hidden; }
 }
 
+/* Typing/Thinking indicator inside message bubble */
+.msg-content.thinking {
+    padding: 12px 18px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 16px;
+}
+
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent-green);
+    border-radius: 50%;
+    display: inline-block;
+    animation: typing-bounce 1.4s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes typing-bounce {
+    0%, 80%, 100% { 
+        transform: scale(0);
+        opacity: 0.3;
+    } 40% { 
+        transform: scale(1.0);
+        opacity: 1;
+    }
+}
+
 .msg-content {
     background-color: var(--card-bg);
     border: 1px solid var(--card-border);
