@@ -21,6 +21,11 @@ env:
   LLAMA_TAG: b11799
   NDK_VERSION: 29.0.13113456
   CMAKE_VERSION: 3.31.6
+  # ubuntu-24.04 runners ship the Android SDK here (see runner-images README).
+  # We use it directly instead of a third-party setup action, which broke on the
+  # Node 20 -> 24 migration and needs to download ~1 GB of SDK on every run.
+  ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+  ANDROID_HOME: /usr/local/lib/android/sdk
 
 jobs:
   build:
@@ -32,37 +37,38 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      # The NDK + CMake download is ~1 GB; cache it so most runs skip it.
+      # The NDK is ~1 GB, so cache it. Keyed on the exact version, so bumping
+      # NDK_VERSION starts a fresh cache instead of restoring a stale one.
       - name: Cache NDK and CMake
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ${{ env.ANDROID_SDK_ROOT }}/ndk/${{ env.NDK_VERSION }}
             ${{ env.ANDROID_SDK_ROOT }}/cmake/${{ env.CMAKE_VERSION }}
           key: android-native-${{ runner.os }}-${{ env.NDK_VERSION }}-${{ env.CMAKE_VERSION }}
 
-      - name: Install SDK packages
+      - name: Install NDK and CMake
         run: |
-          yes | sdkmanager --licenses > /dev/null
-          sdkmanager "platforms;android-36" "build-tools;36.0.0" \
-                     "ndk;${NDK_VERSION}" "cmake;${CMAKE_VERSION}"
+          # sdkmanager writes into the SDK root; make sure the runner user owns it.
+          [ -w "$ANDROID_SDK_ROOT" ] || sudo chown -R "$USER" "$ANDROID_SDK_ROOT"
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "ndk;${NDK_VERSION}" "cmake;${CMAKE_VERSION}"
+          ls "$ANDROID_SDK_ROOT/ndk"
+          ls "$ANDROID_SDK_ROOT/cmake"
 
       - name: Fetch llama.cpp (${{ env.LLAMA_TAG }})
         run: ./scripts/fetch-llama-cpp.sh
 
       - name: Set up Gradle (with caching)
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Python tests (CSV -> knowledge.json)
         run: python3 tools/test_build_knowledge.py
@@ -74,7 +80,7 @@ jobs:
         run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sainik-sahayak-debug-apk
           path: android-app/app/build/outputs/apk/debug/*.apk
