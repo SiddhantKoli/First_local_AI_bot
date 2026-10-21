@@ -56,13 +56,20 @@ jobs:
           key: android-native-${{ runner.os }}-${{ env.NDK_VERSION }}-${{ env.CMAKE_VERSION }}
 
       - name: Install NDK and CMake
+        shell: bash
         run: |
+          set -euo pipefail
           # sdkmanager writes into the SDK root; make sure the runner user owns it.
           [ -w "$ANDROID_SDK_ROOT" ] || sudo chown -R "$USER" "$ANDROID_SDK_ROOT"
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "ndk;${NDK_VERSION}" "cmake;${CMAKE_VERSION}"
-          ls "$ANDROID_SDK_ROOT/ndk"
-          ls "$ANDROID_SDK_ROOT/cmake"
+          # The image does not always put cmdline-tools on PATH, so resolve it.
+          SDKMGR="$(command -v sdkmanager || true)"
+          if [ -z "$SDKMGR" ]; then
+            SDKMGR="$(find "$ANDROID_SDK_ROOT/cmdline-tools" -name sdkmanager -type f | head -n1)"
+          fi
+          echo "using $SDKMGR"
+          yes | "$SDKMGR" --licenses > /dev/null || true
+          "$SDKMGR" "ndk;${NDK_VERSION}" "cmake;${CMAKE_VERSION}"
+          ls "$ANDROID_SDK_ROOT/ndk" "$ANDROID_SDK_ROOT/cmake"
 
       - name: Fetch llama.cpp (${{ env.LLAMA_TAG }})
         run: ./scripts/fetch-llama-cpp.sh
