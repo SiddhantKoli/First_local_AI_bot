@@ -194,13 +194,25 @@ it is the default.
 
 ## Verification status
 
-What has been checked in this workspace, and what has not:
+Checked here:
 
-* Python tooling: `tools/test_build_knowledge.py` passes (13 tests), and the real
-  CSVs produce 236 chunks.
-* Kotlin: unit tests for BM25 and the relevance thresholds run on the JVM via
-  `./gradlew :app:testDebugUnitTest`, against the committed asset.
-* Build: see the commit history / CI run for whether `assembleDebug` succeeded
-  here. **The APK has not been installed on a physical phone**, so token
-  throughput, memory use, thermal behaviour and the picker flow with a real 2 GB
-  GGUF are unmeasured. Treat performance numbers as expectations, not results.
+* `tools/test_build_knowledge.py` — 13 tests pass; the real CSVs produce 236
+  chunks, 172 KB, longest chunk 776 characters.
+* `./gradlew :app:testDebugUnitTest` — 9 BM25 tests pass in 0.3 s, including the
+  in-scope/out-of-scope gate checks against the committed asset.
+* `./gradlew :app:assembleDebug` — builds an 18 MB APK. Verified inside it:
+  `lib/arm64-v8a/libllamajni.so`, `libllama.so`, `libggml*.so`,
+  `assets/knowledge.json` (172 KB), one ABI only, and **no `INTERNET`
+  permission** in the merged manifest.
+
+Not checked:
+
+* **The APK has never been installed on a phone.** Token throughput, memory use,
+  thermals, the SAF picker with a real 2 GB GGUF and the native load path are
+  all unmeasured. Treat any speed claim as an expectation.
+* No instrumented/UI test; the Compose layer is only compile-checked.
+
+If Gradle fails with "Cannot snapshot …/app/build/intermediates/…: not a
+regular file" and the repo lives in a OneDrive/iCloud folder, point the build
+elsewhere with an init script (`layout.buildDirectory.set(...)`) — it is the sync
+client, not the project.
