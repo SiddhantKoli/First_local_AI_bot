@@ -1,0 +1,82 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [android-app]
+    paths:
+      - "android-app/**"
+      - ".github/workflows/build-android.yml"
+  pull_request:
+    paths:
+      - "android-app/**"
+      - ".github/workflows/build-android.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Keep in sync with llama_jni.cpp / scripts/fetch-llama-cpp.sh
+  LLAMA_TAG: b11799
+  NDK_VERSION: 29.0.13113456
+  CMAKE_VERSION: 3.31.6
+
+jobs:
+  build:
+    name: Debug APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android-app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # The NDK + CMake download is ~1 GB; cache it so most runs skip it.
+      - name: Cache NDK and CMake
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.ANDROID_SDK_ROOT }}/ndk/${{ env.NDK_VERSION }}
+            ${{ env.ANDROID_SDK_ROOT }}/cmake/${{ env.CMAKE_VERSION }}
+          key: android-native-${{ runner.os }}-${{ env.NDK_VERSION }}-${{ env.CMAKE_VERSION }}
+
+      - name: Install SDK packages
+        run: |
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" \
+                     "ndk;${NDK_VERSION}" "cmake;${CMAKE_VERSION}"
+
+      - name: Fetch llama.cpp (${{ env.LLAMA_TAG }})
+        run: ./scripts/fetch-llama-cpp.sh
+
+      - name: Set up Gradle (with caching)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Python tests (CSV -> knowledge.json)
+        run: python3 tools/test_build_knowledge.py
+
+      - name: Kotlin unit tests (BM25)
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
+
+      - name: Build debug APK
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: sainik-sahayak-debug-apk
+          path: android-app/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 30
