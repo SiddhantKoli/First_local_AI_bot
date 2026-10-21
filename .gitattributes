@@ -1,0 +1,9 @@
+* text=auto eol=lf
+
+# Windows launchers keep CRLF; shell scripts and JNI/Gradle files must stay LF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.sh text eol=lf
+gradlew text eol=lf
+*.jar binary
+*.png binary
