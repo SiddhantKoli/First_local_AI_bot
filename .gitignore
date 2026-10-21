@@ -6,3 +6,7 @@ chroma_db/
 .pytest_cache/
 .DS_Store
 *.pem
+*.log
+*.pid
+screenshot-*.png
+.freebuff/

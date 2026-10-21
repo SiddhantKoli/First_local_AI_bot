@@ -27,27 +27,50 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="repla
 DATA_DIR = "data"
 CHROMA_DB_DIR = "chroma_db"
 COLLECTION_NAME = "indian_military_kb"
-EMBEDDING_MODEL = "llama3.2"
+EMBEDDING_MODEL = "mxbai-embed-large"
+
+
+def normalize_header(name: str) -> str:
+    """Lower-case a CSV column name and drop BOM/whitespace."""
+    return (name or "").strip().lstrip("\ufeff").lower()
 
 
 def load_csv_to_documents(csv_path: str) -> list[Document]:
-    """Load the military knowledge base CSV format."""
+    """
+    Load a knowledge CSV and map its columns by header name.
+
+    Supported layouts (column order does not matter):
+      * ID, Category, Subcategory, Topic, Content, Keywords
+      * Category, Topic, Content, Source
+    """
     documents = []
     try:
-        with open(csv_path, "r", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            header = next(reader)
+        with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
+            reader = csv.DictReader(f)
+            if not reader.fieldnames:
+                print(f"[WARNING] Empty CSV (no header): {csv_path}")
+                return documents
+
+            # Map normalised header name -> actual column name in the file
+            columns = {normalize_header(name): name for name in reader.fieldnames}
+
+            def field(row, *names):
+                for name in names:
+                    column = columns.get(name)
+                    if column is None:
+                        continue
+                    value = (row.get(column) or "").strip()
+                    if value:
+                        return value
+                return ""
 
             for row in reader:
-                if len(row) < 5:
-                    continue
-
-                row_id = row[0].strip()
-                category = row[1].strip()
-                subcategory = row[2].strip()
-                topic = row[3].strip()
-                content = row[4].strip()
-                keywords = ",".join(row[5:]).strip() if len(row) > 5 else ""
+                category = field(row, "category")
+                subcategory = field(row, "subcategory", "sub_category")
+                topic = field(row, "topic", "title")
+                content = field(row, "content", "text", "answer")
+                keywords = field(row, "keywords", "tags")
+                attribution = field(row, "source", "reference", "attribution")
 
                 if not content:
                     continue
@@ -59,7 +82,15 @@ def load_csv_to_documents(csv_path: str) -> list[Document]:
                 content_parts.append(f"\n{content}")
 
                 full_content = "\n".join(content_parts)
-                metadata = {"source": csv_path, "topic": topic, "category": category}
+                metadata = {
+                    "source": csv_path,
+                    "topic": topic or "Unknown",
+                    "category": category or "General",
+                    "subcategory": subcategory,
+                    "keywords": keywords,
+                }
+                if attribution:
+                    metadata["attribution"] = attribution
 
                 documents.append(Document(page_content=full_content, metadata=metadata))
     except Exception as e:
@@ -138,6 +169,21 @@ def ingest_all_documents():
         print("[WARNING] No documents found in data folder. Add some PDFs, CSVs, or TXT files!")
         return
 
+    # Drop exact duplicates so overlapping CSVs don't bias retrieval
+    unique_documents = []
+    seen = set()
+    for doc in all_documents:
+        key = (doc.metadata.get("topic"), doc.page_content)
+        if key in seen:
+            continue
+        seen.add(key)
+        unique_documents.append(doc)
+
+    duplicates = len(all_documents) - len(unique_documents)
+    if duplicates:
+        print(f"[INFO] Skipped {duplicates} duplicate entries.")
+    all_documents = unique_documents
+
     print(f"\n[INFO] Loaded a total of {len(all_documents)} document chunks.")
     print(f"[INFO] Connecting to Ollama for embeddings using model: {EMBEDDING_MODEL}")
 
@@ -165,4 +211,4 @@ if __name__ == "__main__":
     ingest_all_documents()
 
     print()
-    print("[DONE] Run the web app with: streamlit run app.py")
+    print("[DONE] Run the web app with: uvicorn api:app --port 8000 (or: streamlit run app.py)")

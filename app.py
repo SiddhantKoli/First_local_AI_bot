@@ -40,7 +40,7 @@ st.markdown("""
 
 # Sidebar with information
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/e/e4/Indian_Army_Logo.svg", width=150)
+    st.image("static/bot_icon.png", width=150)
     st.markdown("### 🇮🇳 Sainik Sahayak")
     st.markdown("AI Assistant for Indian Army Personnel.")
     st.markdown("---")

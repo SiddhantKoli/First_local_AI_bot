@@ -19,7 +19,7 @@ from langchain_core.runnables import RunnablePassthrough
 CHROMA_DB_DIR = "chroma_db"
 COLLECTION_NAME = "indian_military_kb"
 LLM_MODEL = "llama3.2"
-EMBEDDING_MODEL = "llama3.2"
+EMBEDDING_MODEL = "mxbai-embed-large"
 
 # --- System Prompt ---
 SYSTEM_PROMPT = """You are Sainik Sahayak, an AI assistant specialized in Indian Military knowledge.
@@ -145,9 +145,9 @@ class MilitaryChatbot:
         sources = []
         for doc in retrieved_docs:
             source_info = {
-                "topic": doc.metadata.get("topic", "Unknown"),
-                "category": doc.metadata.get("category", "Unknown"),
-                "subcategory": doc.metadata.get("subcategory", "Unknown"),
+                "topic": doc.metadata.get("topic") or "Unknown",
+                "category": doc.metadata.get("category") or "General",
+                "subcategory": doc.metadata.get("subcategory") or "General",
             }
             if source_info not in sources:
                 sources.append(source_info)
