@@ -1,0 +1,18 @@
+# Fetched by scripts/fetch-llama-cpp.sh -- never commit the llama.cpp source tree
+third_party/
+
+# Gradle / Android build output
+.gradle/
+build/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# IDE
+.idea/
+*.iml
+*.hprof
+
+# Generated knowledge asset? No: knowledge.json IS committed, so the APK can be
+# built without running the Python script. Regenerate it when data/ changes.
