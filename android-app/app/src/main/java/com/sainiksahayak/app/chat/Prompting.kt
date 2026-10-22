@@ -15,6 +15,14 @@ object Prompting {
     /** Exact refusal text, used verbatim by both the prompt and the BM25 cut-off. */
     const val NO_ANSWER = "I don't have information on that in my knowledge base."
 
+    private val FOLLOW_UP_REFERENCE = Regex(
+        """\b(it|its|they|them|their|this|that|these|those|there|then|also|instead|same|what about|how about|and what|and how)\b""",
+        RegexOption.IGNORE_CASE,
+    )
+
+    fun needsCondensation(question: String): Boolean =
+        FOLLOW_UP_REFERENCE.containsMatchIn(question)
+
     private const val ANSWER_RULES = """
 You are Sainik Sahayak, an offline assistant for Indian Army personnel.
 Answer using ONLY the numbered CONTEXT entries below.
@@ -22,8 +30,8 @@ Answer using ONLY the numbered CONTEXT entries below.
 Rules:
 1. Use only the CONTEXT. Do not add facts from your own training.
 2. If the CONTEXT does not contain the answer, reply exactly: "$NO_ANSWER"
-3. Be concise: at most five short sentences, or a short bullet list.
-4. End with one line listing the entry numbers you used, like: Sources: 1, 3
+3. Answer the question directly and concisely in at most three short sentences.
+4. Do not include source numbers or a Sources line; the app displays sources separately.
 """
 
     private val CONDENSE_RULES = """

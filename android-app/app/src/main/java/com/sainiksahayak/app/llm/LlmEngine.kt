@@ -158,12 +158,12 @@ class LlmEngine(context: Context) {
 
     private companion object {
         /**
-         * 2048 tokens fits the system prompt (~150), four ~800 character chunks
-         * (~1000) and the answer. Raising it costs KV-cache RAM: roughly 115 KB
-         * per token for Llama 3.2 3B on CPU, i.e. ~235 MB here.
+         * 2048 tokens fits the system prompt (~150), three ~800 character chunks
+         * and the answer. Raising it costs KV-cache RAM: roughly 115 KB per token
+         * for Llama 3.2 3B on CPU, i.e. ~235 MB here.
          */
         const val CONTEXT_SIZE = 2048
-        const val MAX_NEW_TOKENS = 320
+        const val MAX_NEW_TOKENS = 96
 
         /** Big cores only; more threads than that just fights for the same cache. */
         val THREADS = Runtime.getRuntime().availableProcessors().coerceIn(2, 6)

@@ -9,7 +9,7 @@ app in the repo root, reduced to what a phone can do:
 | Embeddings | `mxbai-embed-large` via Ollama | none — BM25 (lexical) |
 | Vector store | ChromaDB on disk | in-memory inverted index in the APK |
 | LLM | `llama3.2` via Ollama | Llama 3.2 3B Instruct Q4_K_M via llama.cpp (JNI) |
-| Context | 5 chunks, MMR | 4 chunks, top-k BM25 |
+| Context | 5 chunks, MMR | 3 chunks, top-k BM25 |
 | Network | loopback only | none at all |
 
 Target device: vivo X300 (Dimensity 9500, Android 16, arm64-v8a). `minSdk` 26,
@@ -19,12 +19,12 @@ Target device: vivo X300 (Dimensity 9500, Android 16, arm64-v8a). `minSdk` 26,
 
 ```
 question
-   │  (only when there is earlier conversation)
+   │  (only for a follow-up that refers to earlier turns)
    ▼
 condense follow-up ───────────► on-device LLM rewrites "what about at night?"
    │                            into a standalone query
    ▼
-BM25 over 236 chunks ─────────► top 4 + score + coverage
+BM25 over 236 chunks ─────────► top 3 + score + coverage
    │
    ├── score < 6.5 or coverage < 0.40 ──► canned refusal, no LLM call
    ▼
@@ -37,10 +37,9 @@ llama.cpp (JNI) ──────────────► tokens streamed to
 answer + "Sources" list
 ```
 
-The system prompt forbids outside knowledge, caps the answer length and asks for
-the context entry numbers it used. Sources are also attached to the message
-directly from the retrieval result, so the UI never depends on the model writing
-them correctly.
+The system prompt forbids outside knowledge and keeps answers to three short
+sentences. Sources are attached from retrieval results and appear below the
+finished answer; the model is not asked to repeat them in its response.
 
 ### Relevance gate
 
@@ -55,11 +54,20 @@ Both numbers were tuned on the real asset and are asserted in
 `Bm25RetrieverTest`. Coverage is what rejects questions that only share a common
 word with the knowledge base.
 
+### Faster answers and progress
+
+Standalone questions go straight to retrieval instead of spending time on an
+extra model-generated rewrite, and their prompts omit old conversation turns.
+Only follow-ups that refer to earlier turns are condensed and include chat
+history. The app retrieves three context chunks and caps generated answers at
+96 tokens to reduce prompt processing and generation time. While the model is
+evaluating the prompt, the assistant bubble shows a spinner and “Writing answer”.
+
 ### Follow-up condensation
 
-With at least one earlier user turn, the question is first rewritten by the same
-model (greedy, ≤ 96 tokens) into a standalone search query. If that generation
-fails for any reason the raw question is used, so the feature can only help.
+When the question depends on earlier turns, it is rewritten by the same model
+(greedy, ≤ 96 tokens) into a standalone search query. If that generation fails
+for any reason the raw question is used, so the feature can only help.
 
 ## Build
 
@@ -179,9 +187,9 @@ it is the default.
 
 ## Known limitations
 
-* **CPU only.** No Vulkan backend is compiled, so expect a few tokens per second
-  on a 3B model and several seconds per answer. Enabling Vulkan is a CMake option
-  and a GPU backend build, not a one-line change.
+* **CPU only.** No Vulkan backend is compiled, so a 3B model can take tens of
+  seconds per answer on some phones. The prompt and output length are bounded,
+  but these changes cannot make CPU token generation as fast as GPU inference.
 * **Context is 2048 tokens** (~235 MB of KV cache). The relevance gate keeps the
   prompt around 1200 tokens; a very long question can hit the limit, which the UI
   reports instead of truncating silently.

@@ -78,37 +78,42 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             it.copy(
                 messages = it.messages + userMessage + placeholder,
                 busy = true,
-                status = "Thinking…",
+                status = "Searching knowledge base…",
             )
         }
 
         chatJob = viewModelScope.launch {
             try {
-                // 1. Follow-ups need context to become a standalone search query.
-                val query = if (history.any { it.role == "user" }) {
+                // Only spend a second model pass on questions that need prior context.
+                val query = if (
+                    history.any { it.role == "user" } && Prompting.needsCondensation(question)
+                ) {
                     condense(question, history)
                 } else {
                     question
                 }
 
-                // 2. Retrieve. BM25 is pure CPU and takes well under a millisecond.
+                // Retrieve. BM25 is pure CPU and takes well under a millisecond.
                 _ui.update { it.copy(status = "Searching knowledge base…") }
                 val hits = withContext(Dispatchers.Default) {
-                    activeRetriever.search(query, Retriever.DEFAULT_TOP_K)
+                    activeRetriever.search(query, ANSWER_CONTEXT_CHUNKS)
                 }
 
-                // 3. Relevance gate: no good match means no LLM call at all.
+                // No good match means no LLM call at all.
                 if (!isRelevant(hits)) {
                     updateAssistant { it.copy(text = Prompting.NO_ANSWER) }
                     return@launch
                 }
 
                 updateAssistant { it.copy(sources = hits.map(SourceRef::from)) }
-                _ui.update { it.copy(status = null) }
+                _ui.update { it.copy(status = "Writing answer…") }
 
-                // 4. Generate, streaming tokens into the bubble.
                 engine.generate(
-                    Prompting.answerTurns(hits, question, history),
+                    Prompting.answerTurns(
+                        hits,
+                        question,
+                        history.takeIf { Prompting.needsCondensation(question) }.orEmpty(),
+                    ),
                     maxTokens = MAX_ANSWER_TOKENS,
                 ).collect { token -> appendToken(token) }
                 engine.resetContext()
@@ -187,7 +192,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private companion object {
-        const val MAX_ANSWER_TOKENS = 320
+        const val ANSWER_CONTEXT_CHUNKS = 3
+        const val MAX_ANSWER_TOKENS = 96
         const val MAX_CONDENSE_TOKENS = 96
     }
 }

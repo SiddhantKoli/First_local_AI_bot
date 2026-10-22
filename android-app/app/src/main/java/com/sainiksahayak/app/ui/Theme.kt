@@ -1,51 +1,92 @@
 package com.sainiksahayak.app.ui
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
-// Army olive + brass. Deliberately not the default purple M3 palette.
-private val Olive = Color(0xFF1B3A2F)
-private val Brass = Color(0xFFF2C14E)
+// Matches static/styles.css — dark ops console + accent green.
+val Bg = Color(0xFF0B1118)
+val AccentGreen = Color(0xFF4ADE80)
+val TextSecondary = Color(0xFF8B9EB3)
+val CardBg = Color(0x99121B27)
+val InputBorder = Color(0x4D4ADE80)
+val SurfaceGlass = Color(0x14FFFFFF)
 
-private val LightColors = lightColorScheme(
-    primary = Olive,
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFDCE9DF),
-    onPrimaryContainer = Color(0xFF0B231A),
-    secondary = Color(0xFF5C6350),
-    background = Color(0xFFF7F8F4),
-    surface = Color(0xFFFFFFFF),
-    surfaceVariant = Color(0xFFE6E9E0),
-    onSurface = Color(0xFF1A1C19),
-    onSurfaceVariant = Color(0xFF44483F),
-    tertiary = Brass,
+private val Colors = darkColorScheme(
+    primary = AccentGreen,
+    onPrimary = Color(0xFF0B1118),
+    primaryContainer = Color(0xFF163024),
+    onPrimaryContainer = AccentGreen,
+    secondary = TextSecondary,
+    onSecondary = Color.White,
+    background = Bg,
+    onBackground = Color.White,
+    surface = Color(0xFF121B27),
+    onSurface = Color.White,
+    surfaceVariant = Color(0xFF1A2433),
+    onSurfaceVariant = TextSecondary,
+    outline = Color(0x26FFFFFF),
+    error = Color(0xFFF87171),
+    onError = Color(0xFF0B1118),
+    errorContainer = Color(0xFF3F1D1D),
+    onErrorContainer = Color(0xFFFECACA),
+    tertiary = AccentGreen,
 )
 
-private val DarkColors = darkColorScheme(
-    primary = Color(0xFF9CC7A6),
-    onPrimary = Color(0xFF10281D),
-    primaryContainer = Color(0xFF2A4A38),
-    onPrimaryContainer = Color(0xFFD6EBDC),
-    secondary = Color(0xFFC4C8B6),
-    background = Color(0xFF11140F),
-    surface = Color(0xFF1A1E18),
-    surfaceVariant = Color(0xFF3F443B),
-    onSurface = Color(0xFFE3E4DC),
-    onSurfaceVariant = Color(0xFFC4C8BB),
-    tertiary = Brass,
+private val AppTypography = Typography(
+    headlineLarge = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Bold,
+        fontSize = 32.sp,
+        letterSpacing = 1.5.sp,
+    ),
+    headlineSmall = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 22.sp,
+    ),
+    titleMedium = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 16.sp,
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Normal,
+        fontSize = 15.sp,
+        lineHeight = 22.sp,
+    ),
+    bodySmall = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Normal,
+        fontSize = 13.sp,
+        lineHeight = 18.sp,
+    ),
+    labelMedium = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 12.sp,
+        letterSpacing = 0.5.sp,
+    ),
+    labelSmall = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Medium,
+        fontSize = 11.sp,
+        letterSpacing = 0.4.sp,
+    ),
 )
 
 @Composable
-fun SainikTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit,
-) {
+fun SainikTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = if (darkTheme) DarkColors else LightColors,
+        colorScheme = Colors,
+        typography = AppTypography,
         content = content,
     )
 }
